@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "workspace/intro"
+		},
+		{
+			"name": "web",
+			"path": "workspace/web"
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "automatic"
+	}
+}
