@@ -120,3 +120,121 @@ The following plugin configuration finally worked. also note that you need to de
 				</configuration>
 			</plugin>
 ```
+
+## step3: Check POM.xml
+
+The following pom.xml finally worked for me :tired_face:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.4.3</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.in28minutes.soap.webservices</groupId>
+	<artifactId>spring-course-management</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>spring-course-management</name>
+	<description>Demo project for Spring Boot</description>
+	<properties>
+		<java.version>15</java.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web-services</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+		<plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.7.0</version>
+            <configuration>
+                <release>10</release>
+            </configuration>
+        </plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<!-- JAXB2 maven plugin -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jaxb2-maven-plugin</artifactId>
+				<version>2.5.0</version>
+				<executions>
+					<execution>
+						<id>xjc</id>
+						<goals>
+							<goal>xjc</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<sources>
+						<source>${project.basedir}/src/main/resources/xsd/</source>
+					 </sources>
+					<clearOutputDir>false</clearOutputDir>					
+					<outputDirectory>${project.basedir}/src/main/java</outputDirectory>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
+
+```
+
+---
+
+## Creating a WebService Endpoint
+
+### Step 1: Define your Webservice class and method
+
+In order to make your web-service class, first create a normal class with the Request Response datatypes
+
+```java
+public class CourseDetailsEndpoint {
+  ...
+// our method    
+public GetCourseDetailsResponse 
+                processCourseDetailsRequest (
+                    @RequestPayload GetCourseDetailsRequest request) {
+        CourseDetails record = new CourseDetails();
+        record.setId(1);
+        record.setName("Microservices course");
+        record.setDescription("Wonderful course");
+        GetCourseDetailsResponse result = new GetCourseDetailsResponse();
+        result.setCourseDetails(record);
+        return result;
+    }
+}
+```
+
+### Step 2: Use Spring annotations - 
+
+the following Spring annotations are used
+
+- 
