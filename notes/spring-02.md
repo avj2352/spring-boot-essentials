@@ -44,7 +44,7 @@ xsi:schemaLocation="http://in28minutes.com/courses course-details.xsd"
 </GetCourseDetailsResponse>
 ```
 
-## step1: XML Schema Definition
+## Step1: XML Schema Definition
 
 - An XML Schema Definition is accessed in an XML using the `xsi:schemaLocation`
 - Since the `xsi` is again a namespace, its `xmlns:xsi` needs to be defined also
@@ -93,7 +93,7 @@ You can create a reusable "complexType" definition by providing `complexType` a 
     </xs:complexType>
 ```
 
-## step2: Adding JAXB to our Java Project
+## Step2: Adding JAXB to our Java Project
 
 The following plugin configuration finally worked. also note that you need to dedicate a folder with only `.xsd` file types, in your **resources** folder
 
@@ -121,7 +121,7 @@ The following plugin configuration finally worked. also note that you need to de
 			</plugin>
 ```
 
-## step3: Check POM.xml
+## Step3: Check POM.xml
 
 The following pom.xml finally worked for me :tired_face:
 
@@ -211,6 +211,17 @@ The following pom.xml finally worked for me :tired_face:
 
 ## Creating a WebService Endpoint
 
+### Importing the JAR for handling SOAP Web-service
+
+In order to work with SOAP web-services, we need the following dependency in our maven project
+
+```xml
+<dependency>
+  <groupId>wsdl4j</groupId>
+  <artifactId>wsdl4j</artifactId>
+</dependency>
+```
+
 ### Step 1: Define your Webservice class and method
 
 In order to make your web-service class, first create a normal class with the Request Response datatypes
@@ -237,4 +248,156 @@ public GetCourseDetailsResponse
 
 the following Spring annotations are used
 
-- 
+```java
+import org.springframework.ws.server.endpoint.annotation.Endpoint;
+import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
+import org.springframework.ws.server.endpoint.annotation.RequestPayload;
+import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
+```
+
+- @Endpoint - Enable a SOAP web service endpoint
+- @PayloadRoot - Create a route for the Webservice endpoint
+- @ResponsePayload - Enables spring to serialize the POJO into an XML response
+- @RequestPayload - Enables spring to de-serialize the XML into Java POJO
+
+```java
+package com.in28minutes.soap.webservices.coursemanagement.soap;
+// spring imports
+import org.springframework.ws.server.endpoint.annotation.Endpoint;
+import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
+import org.springframework.ws.server.endpoint.annotation.RequestPayload;
+import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
+
+import com.in28minutes.courses.CourseDetails;
+// custom imports
+import com.in28minutes.courses.GetCourseDetailsRequest;
+import com.in28minutes.courses.GetCourseDetailsResponse;
+
+@Endpoint
+public class CourseDetailsEndpoint {
+    // method
+    // input - GetCourseDetailsRequest
+    // output - GetCourseDetailsResponse
+    @PayloadRoot(namespace = "http://in28minutes.com/courses", localPart = "GetCourseDetailsRequest")
+    @ResponsePayload
+    public GetCourseDetailsResponse 
+                processCourseDetailsRequest (
+                    @RequestPayload GetCourseDetailsRequest request) {
+        CourseDetails record = new CourseDetails();
+        record.setId(1);
+        record.setName("Microservices course");
+        record.setDescription("Wonderful course");
+        GetCourseDetailsResponse result = new GetCourseDetailsResponse();
+        result.setCourseDetails(record);
+        return result;
+    }
+}
+
+```
+
+### Step 4: Creating a WSDL contract using Java
+
+A WSDL requires three important things
+
+- A Port Type
+- A Namespace (or service endpoint)
+- A Schema Definition file (or XSD)
+
+We use **Spring Web Service** to generate the WSDL file for us. The code for handling messages on Webservice using a Dispatcher servlet is as follows:
+
+```java
+package com.in28minutes.soap.webservices.coursemanagement.soap;
+// WebServiceConfig.java
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.ws.config.annotation.EnableWs;
+import org.springframework.ws.transport.http.MessageDispatcherServlet;
+import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
+import org.springframework.xml.xsd.SimpleXsdSchema;
+import org.springframework.xml.xsd.XsdSchema;
+
+// Enable spring webserivce
+@EnableWs
+// Spring configuration
+@Configuration
+public class WebServiceConfig {
+
+    // Message dispatcher servlet
+    // Servlet for simplifying dispatching of Web Services
+    // ApplicationContext
+    // URL -> /ws/*
+    @Bean
+    public ServletRegistrationBean messageDispatcherServlet (ApplicationContext context) {
+        MessageDispatcherServlet msgDispatcherServlet = new MessageDispatcherServlet();
+        // map instance of msgDispatcherServlet to URL
+        msgDispatcherServlet.setApplicationContext(context);
+        msgDispatcherServlet.setTransformWsdlLocations(true);
+        return new ServletRegistrationBean<>(msgDispatcherServlet, "/ws/*");
+    }
+
+}
+
+```
+
+### Step 5: FINALLY, creating a Web-service endpoing to fetch all courses
+
+Once all the above configurations have been made, we can easily create our SOAP web-service endpoint
+
+```java
+package com.in28minutes.soap.webservices.coursemanagement.soap;
+
+
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.ws.config.annotation.EnableWs;
+import org.springframework.ws.transport.http.MessageDispatcherServlet;
+import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
+import org.springframework.xml.xsd.SimpleXsdSchema;
+import org.springframework.xml.xsd.XsdSchema;
+
+// Enable spring webserivce
+@EnableWs
+// Spring configuration
+@Configuration
+public class WebServiceConfig {
+
+    // Message dispatcher servlet
+    // Servlet for simplifying dispatching of Web Services
+    // ApplicationContext
+    // URL -> /ws/*
+    @Bean
+    public ServletRegistrationBean messageDispatcherServlet (ApplicationContext context) {
+        MessageDispatcherServlet msgDispatcherServlet = new MessageDispatcherServlet();
+        // map instance of msgDispatcherServlet to URL
+        msgDispatcherServlet.setApplicationContext(context);
+        msgDispatcherServlet.setTransformWsdlLocations(true);
+        return new ServletRegistrationBean<>(msgDispatcherServlet, "/ws/*");
+    }
+
+    // /ws/courses.wsdl
+    // port type
+    // namespace
+    @Bean(name="courses")
+    public DefaultWsdl11Definition defaultWsdl11Definition(XsdSchema coureSchema) {
+        DefaultWsdl11Definition definition = new DefaultWsdl11Definition();
+        definition.setPortTypeName("CoursePort");
+        definition.setTargetNamespace("http://in28minutes.com/courses");
+        definition.setSchema(coursesSchema());
+        return definition;
+    }
+    // course-details.xsd
+    @Bean
+    public XsdSchema coursesSchema() {
+        return new SimpleXsdSchema(new ClassPathResource("xsd/course-details.xsd"));
+    }
+
+}
+
+```
+
