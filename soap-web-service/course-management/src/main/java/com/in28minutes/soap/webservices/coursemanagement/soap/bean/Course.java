@@ -40,11 +40,7 @@ public class Course {
 
     @Override
     public String toString () {
-        return "{" + " " +
-        "id: " + this.id + ", " +
-        "name: " + this.name + ", " +
-        "description: " + this.description + 
-        " " + "}";
+        return String.format("{id: %s, name: %s, description: %s}", id, name, description);
     }
 
     @Override

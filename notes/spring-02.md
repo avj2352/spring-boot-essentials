@@ -93,6 +93,24 @@ You can create a reusable "complexType" definition by providing `complexType` a 
     </xs:complexType>
 ```
 
+### Multiple Values
+
+```xml
+
+<xs:element name="GetAllCourseDetailsResponse">
+		<xs:complexType>
+			<xs:sequence>
+        <!--In order to get multiple Course details. Use the maxOccurs="unbounded"-->
+				<xs:element name="CourseDetails" type="tns:CourseDetails" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+```
+
+In order to get multiple values, we used the **maxOccurs** attribute to be set to `unbounded`
+
+
+
 ## Step2: Adding JAXB to our Java Project
 
 The following plugin configuration finally worked. also note that you need to dedicate a folder with only `.xsd` file types, in your **resources** folder
@@ -342,7 +360,7 @@ public class WebServiceConfig {
 
 ```
 
-### Step 5: FINALLY, creating a Web-service endpoing to fetch all courses
+### Step 5: FINALLY, creating a Web-service endpoint to fetch all courses
 
 Once all the above configurations have been made, we can easily create our SOAP web-service endpoint
 
@@ -400,4 +418,14 @@ public class WebServiceConfig {
 }
 
 ```
+
+## Things to know about the WSDL
+
+On a high level, the following are the important parts to a WSDL
+
+- wsdl:**types** - Defines the stuff within the Schema. the entire content of Schema is present in types
+- wsdl:**message** - Defining the Request and Responses that will be exchanged is present in the messages
+- wsdl:**portType** - Once you have your request and response defined. You can map them to operations. All operations are collated within the portType. **portType** is like an interface containing operation definitions
+- wsdl:**binding** - _How are we going to expose our operation_. Binding defines the implementation. Shows if the service call happens over **HTTP** or **MQ** (Message Queue). style is a **Document** or **RPC** (remote procedure call)
+- wsdl:**service** - defines the Address of the SOAP service.
 

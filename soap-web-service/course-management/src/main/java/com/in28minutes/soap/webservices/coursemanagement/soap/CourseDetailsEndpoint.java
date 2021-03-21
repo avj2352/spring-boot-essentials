@@ -1,4 +1,5 @@
 package com.in28minutes.soap.webservices.coursemanagement.soap;
+import org.springframework.beans.factory.annotation.Autowired;
 // spring imports
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
@@ -9,9 +10,13 @@ import com.in28minutes.courses.CourseDetails;
 // custom imports
 import com.in28minutes.courses.GetCourseDetailsRequest;
 import com.in28minutes.courses.GetCourseDetailsResponse;
+import com.in28minutes.soap.webservices.coursemanagement.soap.service.CourseDetailsService;
 
 @Endpoint
 public class CourseDetailsEndpoint {
+
+    @Autowired
+    CourseDetailsService service;
     // method
     // input - GetCourseDetailsRequest
     // output - GetCourseDetailsResponse
