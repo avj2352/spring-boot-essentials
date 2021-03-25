@@ -96,7 +96,7 @@ You can create a reusable "complexType" definition by providing `complexType` a 
 ### Multiple Values
 
 ```xml
-
+<!--Using a sequence to define a list of courses.. and using maxOccurs attribute-->
 <xs:element name="GetAllCourseDetailsResponse">
 		<xs:complexType>
 			<xs:sequence>
@@ -109,7 +109,37 @@ You can create a reusable "complexType" definition by providing `complexType` a 
 
 In order to get multiple values, we used the **maxOccurs** attribute to be set to `unbounded`
 
+### Defining Enumeration & Choices using XSD
 
+Instead of sending 0 and 1 as SOAP responses. We can instead use an enumeration instead. We will make this as a Resuable Simple Type in XSD
+
+```xml
+<xs:simpleType name="Status">
+  <!--Need to restrict the datatype to only using strings-->
+	<xs:restriction base="xs:string">
+    <xs:enumeration>SUCCESS</xs:enumeration>
+    <xs:enumeration>FAILURE</xs:enumeration>
+  </xs:restriction>
+</xs:simpleType>
+```
+
+We can then, refer to this. Reusable XSD component using the `tns:Status` under **type** attribute
+
+```xml
+<xs:element name="DeleteCourseDetailsResponse">
+  <xs:complexType>
+    <xs:element name="status" type="tns:Status"></xs:element>
+  </xs:complexType>
+</xs:element>
+```
+
+This can be easily mapped to a Java field as follows
+
+```java
+public enum Status { SUCCESS, FAILURE }
+```
+
+> NOTE: when you import complexTypes with Enumeration into your Java project, JAXB creates another enum property. So you need to map your enum value to the one that JAXB provides !!
 
 ## Step2: Adding JAXB to our Java Project
 
@@ -428,4 +458,140 @@ On a high level, the following are the important parts to a WSDL
 - wsdl:**portType** - Once you have your request and response defined. You can map them to operations. All operations are collated within the portType. **portType** is like an interface containing operation definitions
 - wsdl:**binding** - _How are we going to expose our operation_. Binding defines the implementation. Shows if the service call happens over **HTTP** or **MQ** (Message Queue). style is a **Document** or **RPC** (remote procedure call)
 - wsdl:**service** - defines the Address of the SOAP service.
+
+
+
+## Exception Handling in SOAP Web-services
+
+The SOAP Envelope can be summarized as follows:
+
+- SOAP-ENV:Envelope
+  - SOAP-ENV:Header
+  - SOAP-ENV:Body
+    - Contains Fault Response also
+
+>  NOTE: Spring web-services actually handles error response properly by sending a fault-code and fault-string
+
+However, these errors can also be custom handled
+
+```java
+// course == null throw error !
+if (Objects.isNull(course)) throw new RuntimeException("Invalid Course ID " + course.getId());
+```
+
+The above Exception can defined as a Custom Exception in Java. This gives us a benefit of defining a proper server response such as Client Error
+
+```java
+// Use a server error response annotation
+@SoapFault(faultCode = FaultCode.CLIENT)
+public class CourseNotFoundException extends RuntimeException {
+  public CourseNotFoundException(String msg) {
+    super(message); // call RuntimeException(String msg);
+  }
+}
+```
+
+Therefore the same above error can be wrapped as follows:
+
+```java
+// course == null throw error !
+if (Objects.isNull(course)) throw new CourseNotFoundException("Invalid Course ID " + course.getId());
+```
+
+### Custom Fault Codes using Spring Annotation
+
+We can also provide Custom Fault codes to Spring annotations as follows
+
+```java
+// Custom Fault Code annotation
+@SoapFault(faultCode = FaultCode.CUSTOM, customFaultCode="{http://in28minutes.com/courses}001_COURSE_NOT_FOUND")
+public class CourseNotFoundException extends RuntimeException {
+  private static final long serialVersionUID = 35189696L;
+  public CourseNotFoundException(String msg) {
+    super(message); // call RuntimeException(String msg);
+  }
+}
+```
+
+## Web-service Security
+
+Spring Web-service security can be implemented in one of three ways -
+
+- Authentication (Username, password)
+- Certificates
+- Digital Signatures
+
+We will be implementing **XWSS** which stands for. - _XML & Webservice Security._
+
+- Security Policy
+- XwsSecurityInterceptor
+
+### Security related dependencies
+
+As part of Spring dependency, the Security module can be downloaded from maven as follows -
+
+> Spring-ws-security
+
+```xml
+<dependency>
+  <groupId>org.springframework.ws</groupId>
+  <artifactId>spring-ws-security</artifactId>
+  <exclusions>
+    <exclusion>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+    </exclusion>
+  </exclusions>
+</dependency>
+```
+
+> XWS-security
+
+```xml
+<dependency>
+  <groupId>org.sun.xml.wss</groupId>
+  <artifactId>xws-security</artifactId>
+  <version>3.0</version>
+  <exclusions>
+    <exclusion>
+      <groupId>javax.xml.crypto</groupId>
+      <artifactId>xmldsig</artifactId>
+    </exclusion>
+  </exclusions>
+</dependency>
+```
+
+> JavaX activation
+
+```xml
+<dependency>
+  <groupId>javax.activation</groupId>
+  <artifactId>activation</artifactId>
+  <version>1.1.1</version>
+</dependency>
+```
+
+### Adding Security to SOAP web-service configuration
+
+We need to add an XML Security Interceptor which will intercept all incoming requests to our application & checks if its secure - **XwsSecurityInterceptor**
+
+As part of implementing the Security interceptor, we need to do 2 things
+
+- Implement the Security callback handler
+  - Callback handler does check username & password - **SimplePasswordValidationCallbackHandler**
+- Security policy - **security-policy.xml**
+
+> WebServiceConfig.java
+
+```java
+@Bean
+public XwsSecurityInterceptor securityInterceptor () {
+  // Implement the Security callback handler - SimplePasswordValidationCallbackHandler
+  // Security policy - **security-policy.xml
+  XwsSecurityInterceptor securityInterceptor = new XwsSecurityInterceptor();
+  return securityInterceptor
+}
+```
+
+---
 
