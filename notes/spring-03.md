@@ -134,7 +134,10 @@ public class UserNotFoundException extends RuntimeException {
 
 ## Handling Generic Exception Handling for all Responses
 
-In order to define a standard / uniform structure for Error responses in our API project, Spring provides an Abstract class called - **ResponseEntityExceptionHandler**. All we need to do is extend our custom class from this abstract class and override some of it's abstract methods
+In order to define a standard / uniform structure for Error responses in our API project, Spring provides a bunch of different ways to setup Common Exception Handlers
+- Extending Abstract class called - **ResponseEntityExceptionHandler**. All we need to do is extend our custom class from this abstract class and override some of it's abstract methods
+- Annotating @RestController - Used for annotating a class as a Rest Controller
+- Annotating @ControllerAdvice - Used for annotating a  common controller with shareable methods
 
 ```java
 import java.util.Date;
@@ -165,6 +168,35 @@ public class ExceptionResponse {
 
 }
 
+// Creating a Common Shareable Controller for Exception Handler
+
+@ControllerAdvice
+@RestController
+public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
+
+	@ExceptionHandler(Exception.class)
+	public final ResponseEntity<Object> handleAllExceptions(Exception ex, WebRequest request) {
+		ExceptionResponse exceptionResponse = new ExceptionResponse(new Date(), ex.getMessage(),
+				request.getDescription(false));
+		return new ResponseEntity(exceptionResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@ExceptionHandler(UserNotFoundException.class)
+	public final ResponseEntity<Object> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
+		ExceptionResponse exceptionResponse = new ExceptionResponse(new Date(), ex.getMessage(),
+				request.getDescription(false));
+		return new ResponseEntity(exceptionResponse, HttpStatus.NOT_FOUND);
+	}
+	
+	@Override
+	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+			HttpHeaders headers, HttpStatus status, WebRequest request) {
+		ExceptionResponse exceptionResponse = new ExceptionResponse(new Date(), "Validation Failed",
+				ex.getBindingResult().toString());
+		return new ResponseEntity(exceptionResponse, HttpStatus.BAD_REQUEST);
+	}	
+}
+
 ```
 
 ## Spring Annotations List
@@ -175,4 +207,111 @@ public class ExceptionResponse {
 - **@ResponseBody** - One of the important annotations present within the @RestController annotation
 
 
+
+## Important Points & Videos
+
+- ***Lesson 81*** - Implementing Static Filtering when deserializing Responses
+  - **@JsonIgnore** (3:28)
+  - **@JsonIgnoreProperties** (5:56)
+  - Filtering of some fields in Response Entities
+
+---
+
+- ***Lesson 82*** - Implementing Dynamic Filtering when deserializing Responses
+  - Sending specific fields for specific requests
+  - **MappingJacksonValue** (2:05) - Create a dynamic filter
+  - **SimpleBeanPropertyFilter.filterOutAllExcept("field1, field2")** - (4:16)
+  - **@JsonFilter** (6:05)
+
+```java
+// field1,field2
+	@GetMapping("/filtering")
+	public MappingJacksonValue retrieveSomeBean() {
+		SomeBean someBean = new SomeBean("value1", "value2", "value3");
+
+		SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("field1", "field2");
+
+		FilterProvider filters = new SimpleFilterProvider().addFilter("SomeBeanFilter", filter);
+    
+		MappingJacksonValue mapping = new MappingJacksonValue(someBean);
+		mapping.setFilters(filters);
+
+		return mapping;
+	}
+```
+
+```java
+package com.in28minutes.rest.webservices.restfulwebservices.filtering;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
+
+@JsonFilter("SomeBeanFilter")
+public class SomeBean {
+	
+	private String field1;
+	
+	private String field2;
+	
+	private String field3;
+
+	public SomeBean(String field1, String field2, String field3) {
+		super();
+		this.field1 = field1;
+		this.field2 = field2;
+		this.field3 = field3;
+	}
+
+	public String getField1() {
+		return field1;
+	}
+
+	public void setField1(String field1) {
+		this.field1 = field1;
+	}
+
+	public String getField2() {
+		return field2;
+	}
+
+	public void setField2(String field2) {
+		this.field2 = field2;
+	}
+
+	public String getField3() {
+		return field3;
+	}
+
+	public void setField3(String field3) {
+		this.field3 = field3;
+	}
+
+}
+```
+
+---
+
+- ***Lesson 83*** - Versioning (4:00)
+
+  - **Media type** versioning - Github
+  - **Custom headers** versioning - Microsoft
+  - **URI** versioning - Twitter
+  - **Parameter** versioning - Amazon
+
+  - Pros & Cons of each approach  (6:00)
+
+---
+
+
+
+## Richardson Maturity Model
+
+A model (developed by **Leonard Richardson**) that breaks down the principal elements of a REST approach into three steps. These introduce resources, http verbs, and hypermedia controls.
+
+- **Level 0** - Expose SOAP Web-services in REST style
+- **Level 1** - Expose Resource with Proper URI
+- **Level 2** - Level 1 + Proper use of HTTP Request Methods
+- **Level 3** - Level 2 + Hyper Media As The Engine Of Application State (HATEOAS)
+  - Data + Next Possible Actions
+
+---
 
