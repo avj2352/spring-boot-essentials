@@ -3,7 +3,7 @@
 ## Important Links
 
 - [XML Schema Wikipedia](http://edutechwiki.unige.ch/en/XML_Schema_tutorial_-_Basics)
-
+- [Spring Annotations List](https://www.journaldev.com/16966/spring-annotations#spring-annotations-list)
 
 We will be creating the following Request response in XML.
 
@@ -592,6 +592,27 @@ public XwsSecurityInterceptor securityInterceptor () {
   return securityInterceptor
 }
 ```
+
+## List of all Spring Annotations learnt
+
+The following is a list of all Spring Annotations learnt while building a SOAP Web-service. Its a quick wikipedia of what each annotation does.
+
+- **@SpringBootApplication**: Initialize Class as the main entry class for Spring application
+- **@Endpoint**: registers the class with Spring WS as a Web Service Endpoint
+- **@Autowired**: Used by Spring Container to autowire components as dependencies
+- **@PayloadRoot**: defines the handler method according to the namespace and localPart attributes
+- **@ResponsePayload**: indicates that this method returns a value to be mapped to the response payload
+- **@RequestPayload**: indicates that this method accepts a parameter to be mapped from the incoming request
+- **@EnableWs**: enables SOAP Web Service features in this Spring Boot application. The WebServiceConfig class extends the WsConfigurerAdapter base class, which configures the annotation-driven Spring-WS programming model.
+- **@Configuration**: Used to indicate that a class declares one or more **@Bean** methods. These classes are processed by Spring container to generate bean definitions& service requests for those beans at runtime
+- **@Bean**: Indicates a method produces a bean to managed by the Spring container
+- **@ComponentScan**: Configures component scanning directives for use with **@Configuration** classes. Here we can specify the base packages to scan for spring components.
+- **@Component**: Indicates that an annotated class is a “component”. Such classes are considered as candidates for auto-detection when using annotation-based configuration and classpath scanning.
+- **@EnableWebSecurity**: is used with **@Configuration** class to have the Spring Security configuration defined, read more at Spring Security Example.
+- **@SpringBootTest**: Define a Test-suite related to Spring components 
+- **@BeforeEach**: Runs before starting any of the tests
+- **@Test**: Declares a method as a test method
+
 
 ---
 
