@@ -1,0 +1,2 @@
+googleClientId=80957883789-20q7l1p3so05d2subkteaiqk46rgvf54.apps.googleusercontent.com
+googleClientSecret=mtxGJUOj8XCIPCrGNXFn0eUE
